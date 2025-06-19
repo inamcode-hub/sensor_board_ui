@@ -1,34 +1,50 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import './DataTableWrapper.css';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
-const DataTable = () => {
-  const [items, setItems] = useState([]);
-  const [calitems, setCalitems] = useState([]);
-  const [error, setError] = useState(null);
+const API_BASE = import.meta.env.VITE_API_BASE_URL;
+
+const DataTable: React.FC = () => {
+  const [items, setItems] = useState<any[]>([]);
+  const [calitems, setCalitems] = useState<any[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const lastSuccessRef = useRef<number>(Date.now());
 
   const getItems = async () => {
     try {
       const [crudRes, calrigRes] = await Promise.all([
-        fetch('http://192.168.1.83:9000/crud'),
-        fetch('http://192.168.1.83:9000/calrig'),
+        fetch(`${API_BASE}/crud`),
+        fetch(`${API_BASE}/calrig`),
       ]);
 
       if (!crudRes.ok || !calrigRes.ok) {
-        throw new Error('Failed to fetch one or more endpoints.');
+        throw new Error('One or more endpoints failed to load.');
       }
 
-      const [itemsData, calitemsData] = await Promise.all([
+      const [crudData, calrigData] = await Promise.all([
         crudRes.json(),
         calrigRes.json(),
       ]);
 
-      setItems(itemsData);
-      setCalitems(calitemsData);
+      setItems(crudData);
+      setCalitems(calrigData);
       setError(null);
+
+      const now = Date.now();
+      if (now - lastSuccessRef.current > 60 * 60 * 1000) {
+        toast.success('✅ Sensor data received successfully.');
+        lastSuccessRef.current = now;
+      }
     } catch (err) {
       console.error('Fetch error:', err);
-      setError('Unable to load sensor data. Please check connection.');
+      if (!error) {
+        toast.error(
+          '⚠️ Unable to load sensor data. Please check your connection.'
+        );
+      }
+      setError('Unable to load sensor data.');
     } finally {
       setLoading(false);
     }
@@ -40,41 +56,51 @@ const DataTable = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const renderBoards = (item) => {
-    const boards = [];
-    for (let i = 1; i <= 12; i++) {
-      const aiM = `ai${(i - 1) * 2 + 1}`;
-      const aiT = `ai${(i - 1) * 2 + 2}`;
-      const mRaw = item[aiM];
-      const tRaw = item[aiT];
+  const renderBoards = (item: Record<string, any>) => {
+    return Array.from({ length: 12 }, (_, i) => {
+      const aiM = `ai${i * 2 + 1}`;
+      const aiT = `ai${i * 2 + 2}`;
 
       const mVal =
-        mRaw && !isNaN(parseFloat(mRaw)) ? parseFloat(mRaw).toFixed(3) : '-';
+        item[aiM] != null && !isNaN(item[aiM])
+          ? parseFloat(item[aiM]).toFixed(3)
+          : '-';
       const tVal =
-        tRaw && !isNaN(parseFloat(tRaw)) ? parseFloat(tRaw).toFixed(3) : '-';
+        item[aiT] != null && !isNaN(item[aiT])
+          ? parseFloat(item[aiT]).toFixed(3)
+          : '-';
 
-      boards.push(
-        <div key={i} className={`board board${i}`}>
-          <div className="board-label">BOARD {i}</div>
+      return (
+        <div key={i + 1} className={`board board${i + 1}`}>
+          <div className="board-label">BOARD {i + 1}</div>
           <div className="m-label">M</div>
           <div className="t-label">T</div>
           <div className="m-value">{mVal}</div>
           <div className="t-value">{tVal}</div>
         </div>
       );
-    }
-    return boards;
+    });
   };
 
-  if (loading) return <div className="loading">Loading sensor data...</div>;
-  if (error) return <div className="loading">{error}</div>;
-  if (!items.length)
-    return <div className="loading">No sensor data available.</div>;
-
   return (
-    <section className="content-area datatable-wrapper">
-      {renderBoards(items[0])}
-    </section>
+    <>
+      <ToastContainer
+        position="bottom-right"
+        autoClose={5000}
+        hideProgressBar
+      />
+      {loading ? (
+        <div className="loading">Loading sensor data...</div>
+      ) : error ? (
+        <div className="loading">{error}</div>
+      ) : !items.length ? (
+        <div className="loading">No sensor data available.</div>
+      ) : (
+        <section className="content-area datatable-wrapper">
+          {renderBoards(items[0])}
+        </section>
+      )}
+    </>
   );
 };
 
