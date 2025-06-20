@@ -1,7 +1,9 @@
 import React from 'react';
-import Chart from 'react-apexcharts';
 import { useSelector } from 'react-redux';
-import moment from 'moment-timezone';
+import Chart from 'react-apexcharts';
+import { Card, Typography } from 'antd';
+
+const { Title } = Typography;
 
 const ZoomChartBoard = ({ boardNumber = 1 }) => {
   const { data, loading, error } = useSelector((state) => state.chart);
@@ -11,14 +13,14 @@ const ZoomChartBoard = ({ boardNumber = 1 }) => {
 
   const series = [
     {
-      name: 'M',
+      name: 'Moisture (M)',
       data: data.map((d) => [
         new Date(d.timestamp).getTime(),
         parseFloat(d[aiM]),
       ]),
     },
     {
-      name: 'T',
+      name: 'Temperature (T)',
       data: data.map((d) => [
         new Date(d.timestamp).getTime(),
         parseFloat(d[aiT]),
@@ -28,7 +30,7 @@ const ZoomChartBoard = ({ boardNumber = 1 }) => {
 
   const options = {
     chart: {
-      id: 'sensor-chart',
+      id: `zoom-board-${boardNumber}`,
       type: 'line',
       zoom: {
         enabled: true,
@@ -54,27 +56,36 @@ const ZoomChartBoard = ({ boardNumber = 1 }) => {
         formatter: (val) => val.toFixed(2),
       },
     },
+    stroke: {
+      curve: 'smooth',
+      width: 2,
+    },
     tooltip: {
       x: {
         format: 'yyyy-MM-dd HH:mm:ss',
       },
     },
-    stroke: {
-      curve: 'smooth',
+    colors: ['#1890ff', '#fa541c'], // Ant Design palette
+    legend: {
+      position: 'top',
+      horizontalAlign: 'center',
     },
   };
 
   return (
-    <div style={{ padding: '1rem' }}>
-      <h3>🔍 Zoom Chart - Board {boardNumber}</h3>
+    <Card
+      title={<Title level={4}>🔍 Zoom Chart - Board {boardNumber}</Title>}
+      style={{ marginBottom: '1rem' }}
+      bodyStyle={{ padding: '1rem' }}
+    >
       {loading && <p>⏳ Loading chart data...</p>}
       {error && <p style={{ color: 'red' }}>❌ Error: {error}</p>}
       {!loading && !data.length && <p>No data available</p>}
 
-      {!loading && data.length > 0 && (
+      {data.length > 0 && (
         <Chart options={options} series={series} type="line" height={400} />
       )}
-    </div>
+    </Card>
   );
 };
 
