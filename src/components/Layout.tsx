@@ -64,12 +64,12 @@ const Footer = styled.footer`
   background-color: #213966;
   border-top: 1px solid #dee2e6;
   text-align: center;
-  padding: 2rem 1rem 1rem;
+  /* padding: 2rem 1rem 1rem; */
 `;
 
 const DryerMasterLogo = styled.div`
   display: inline-block;
-  margin-bottom: 1rem;
+  /* margin-bottom: 1rem; */
 
   .bar {
     width: 80px;
