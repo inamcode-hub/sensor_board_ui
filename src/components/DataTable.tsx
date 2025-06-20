@@ -5,15 +5,15 @@ import 'react-toastify/dist/ReactToastify.css';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
-const DataTable: React.FC = () => {
-  const [items, setItems] = useState<any[]>([]);
-  // const [calitems, setCalitems] = useState<any[]>([]);
-  const [setCalitems] = useState<any[]>([]);
-  const [error, setError] = useState<string | null>(null);
+const DataTable = () => {
+  const [items, setItems] = useState([]);
+  const [calitems, setCalitems] = useState([]);
+  const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
-  const lastSuccessRef = useRef<number>(Date.now());
+  const lastSuccessRef = useRef(Date.now());
 
   const getItems = async () => {
+    console.log('🔄 Fetching sensor data...');
     try {
       const [crudRes, calrigRes] = await Promise.all([
         fetch(`${API_BASE}/crud`),
@@ -29,6 +29,9 @@ const DataTable: React.FC = () => {
         calrigRes.json(),
       ]);
 
+      console.log('✅ CRUD data:', crudData);
+      console.log('✅ Calrig data:', calrigData);
+
       setItems(crudData);
       setCalitems(calrigData);
       setError(null);
@@ -39,7 +42,7 @@ const DataTable: React.FC = () => {
         lastSuccessRef.current = now;
       }
     } catch (err) {
-      console.error('Fetch error:', err);
+      console.error('❌ Fetch error:', err);
       if (!error) {
         toast.error(
           '⚠️ Unable to load sensor data. Please check your connection.'
@@ -57,19 +60,15 @@ const DataTable: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const renderBoards = (item: Record<string, any>) => {
+  const renderBoards = (item) => {
     return Array.from({ length: 12 }, (_, i) => {
       const aiM = `ai${i * 2 + 1}`;
       const aiT = `ai${i * 2 + 2}`;
 
       const mVal =
-        item[aiM] != null && !isNaN(item[aiM])
-          ? parseFloat(item[aiM]).toFixed(3)
-          : '-';
+        item[aiM] && !isNaN(item[aiM]) ? parseFloat(item[aiM]).toFixed(3) : '-';
       const tVal =
-        item[aiT] != null && !isNaN(item[aiT])
-          ? parseFloat(item[aiT]).toFixed(3)
-          : '-';
+        item[aiT] && !isNaN(item[aiT]) ? parseFloat(item[aiT]).toFixed(3) : '-';
 
       return (
         <div key={i + 1} className={`board board${i + 1}`}>
