@@ -1,81 +1,45 @@
-.datatable-wrapper {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: repeat(3, auto);
-  gap: 12px;
-  padding: 16px;
-  background-color: #f5f5f5;
-  box-sizing: border-box;
-  font-family: 'Open Sans', 'Roboto', sans-serif;
+.sensor-card {
+  background: linear-gradient(to bottom right, #f9f9f9, #ffffff) !important;
+  border: 1px solid #e0e0e0 !important;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease-in-out, box-shadow 0.3s ease;
 }
 
-.board {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 50px 40px 80px;
-  border: 4px solid #e69f66;
-  background-color: #272822;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
-  border-radius: 6px;
+.sensor-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
 }
 
-.board-label {
-  grid-column: 1 / 3;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 26px;
+.sensor-card .ant-card-head {
+  background: linear-gradient(to right, #eaf6ff, #d3eefd) !important;
+  color: #005a9e;
   font-weight: bold;
-  color: #e6db74;
-  border-bottom: 1px solid #ccc;
-  text-transform: uppercase;
+  font-size: 1.15rem;
+  border-bottom: 1px solid #d0d0d0;
 }
 
-.m-label,
-.t-label {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 24px;
+/* Label and values */
+.label {
+  font-size: 1rem;
   font-weight: 600;
-  border-top: 1px solid #dee2e6;
-  border-bottom: 1px solid #dee2e6;
-}
-
-.m-label {
-  color: #a6e22e;
-  border-right: 1px solid #dee2e6;
-}
-
-.t-label {
-  color: #f92672;
-  border-left: 1px solid #dee2e6;
-}
-
-.m-value,
-.t-value {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 36px;
-  font-weight: bold;
-  border-top: 1px solid #dee2e6;
-}
-
-.m-value {
-  color: #a6e22e;
-  border-right: 1px solid #dee2e6;
-}
-
-.t-value {
-  color: #f92672;
-  border-left: 1px solid #dee2e6;
-}
-
-.loading {
-  font-size: 20px;
-  text-align: center;
-  padding: 2rem;
   color: #666;
-  font-style: italic;
+  text-align: center;
+  margin-bottom: 0.25rem;
+}
+
+.value {
+  font-size: 2.2rem;
+  font-weight: 700;
+  text-align: center;
+  font-family: 'Courier New', monospace;
+  text-shadow: 0 1px 0 #fff;
+}
+
+.moisture {
+  color: #3bb54a; /* modern green */
+}
+
+.temp {
+  color: #e55353; /* soft red */
 }

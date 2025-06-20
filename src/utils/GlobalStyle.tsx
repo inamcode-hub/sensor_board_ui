@@ -55,4 +55,40 @@ export const GlobalStyle = createGlobalStyle`
   .ant-notification-notice-message {
     font-size: 1rem;
   }
+
+  .datatable-container {
+  padding: 1rem;
+}
+
+.updated-tag {
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  text-align: right;
+}
+
+.sensor-card .sensor-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.label {
+  font-size: 1.25rem;
+  color: #d4d4d4;
+  margin-bottom: 4px;
+}
+
+.value {
+  font-size: 2.4rem;
+  font-weight: bold;
+}
+
+.moisture {
+  color: #b6ff41;
+}
+
+.temp {
+  color: #ff4081;
+}
+
 `;
