@@ -107,7 +107,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           📊 Dashboard
         </h2>
         <SidebarLink to="/">🏠 Home</SidebarLink>
-        <SidebarLink to="/dashboard">📦 Sensors</SidebarLink>
+        <SidebarLink to="/Analytics">📦 Analytics</SidebarLink>
       </Sidebar>
       <ContentWrapper>
         <DateTime>{new Date().toLocaleString('en-US')}</DateTime>

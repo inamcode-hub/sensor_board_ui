@@ -1,5 +1,11 @@
+import DataTable from '../components/DataTable';
+
 const Home = () => {
-  return <h1>🏠 Home Page</h1>;
+  return (
+    <div>
+      <DataTable />
+    </div>
+  );
 };
 
 export default Home;
