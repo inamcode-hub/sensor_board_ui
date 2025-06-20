@@ -130,7 +130,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           </DryerMasterLogo>
           <p>Dryer Master&#8201;&reg;</p>
           <p>
-            &copy;{`Copyright ${1900 + new Date().getYear()} Dryer Master Inc.`}
+            &copy;{`Copyright ${new Date().getFullYear()} Dryer Master Inc.`}
           </p>
         </Footer>
       </ContentWrapper>

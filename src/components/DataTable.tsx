@@ -7,7 +7,8 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
 const DataTable: React.FC = () => {
   const [items, setItems] = useState<any[]>([]);
-  const [calitems, setCalitems] = useState<any[]>([]);
+  // const [calitems, setCalitems] = useState<any[]>([]);
+  const [setCalitems] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const lastSuccessRef = useRef<number>(Date.now());
