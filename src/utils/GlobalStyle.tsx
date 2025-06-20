@@ -6,7 +6,7 @@ export const GlobalStyle = createGlobalStyle`
   }
 
   html {
-    font-size: 16px;
+    font-size: 20px;
   }
 
   body {
