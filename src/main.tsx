@@ -6,6 +6,7 @@ import { GlobalStyle } from './utils/GlobalStyle';
 import { ToastContainer } from 'react-toastify';
 import { Provider } from 'react-redux';
 import store from './features/redux-store/index.js';
+import 'antd/dist/reset.css'; // Ant Design v5+
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
