@@ -48,7 +48,7 @@ const AnalyticsControlsWrapper = ({ children }) => {
   };
 
   return (
-    <div style={{ padding: '1.5rem' }}>
+    <div style={{ padding: '0rem' }}>
       <Title level={3}>📊 Analytics View</Title>
 
       <Row gutter={[16, 16]} align="middle">
