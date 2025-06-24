@@ -2,7 +2,6 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import { Button } from 'antd';
 
-// Map boards to ai channels and serial numbers
 const boardMap = {
   1: { moisture: 'ai1', temp: 'ai2', serial: 'N2521102' },
   2: { moisture: 'ai3', temp: 'ai4', serial: 'N2521103' },
@@ -18,7 +17,6 @@ const boardMap = {
   12: { moisture: 'ai23', temp: 'ai24', serial: 'N2521113' },
 };
 
-// Format: 6/23/25 10:17 AM
 const formatExcelDate = (dateStr) => {
   const date = new Date(dateStr);
   const mm = date.getMonth() + 1;
@@ -31,6 +29,18 @@ const formatExcelDate = (dateStr) => {
   return `${mm}/${dd}/${yy} ${h}:${min} ${ampm}`;
 };
 
+const isStableMoisture = (entries, threshold = 0.02) => {
+  for (let i = 1; i < entries.length; i++) {
+    const dt =
+      new Date(entries[i].timestamp) - new Date(entries[i - 1].timestamp);
+    const dMoisture = Math.abs(entries[i].m - entries[i - 1].m);
+    if (dt <= 1000 && dMoisture > threshold) {
+      return false;
+    }
+  }
+  return true;
+};
+
 const DownloadTestReportButton = () => {
   const { data } = useSelector((state) => state.chart);
 
@@ -39,11 +49,6 @@ const DownloadTestReportButton = () => {
       console.warn('No chart data available!');
       return;
     }
-
-    const globalStart = data[0]?.timestamp;
-    const globalEnd = data[data.length - 1]?.timestamp;
-    console.log(`📊 Global Data Range: ${globalStart} → ${globalEnd}`);
-    console.log(`📊 Total Rows: ${data.length}`);
 
     const report = [];
 
@@ -69,14 +74,14 @@ const DownloadTestReportButton = () => {
         const mMin = Math.min(...mVals);
         const tMax = Math.max(...tVals);
         const tMin = Math.min(...tVals);
-        const mv = filtered[filtered.length - 1].m - filtered[0].m;
-        const pass = Math.abs(mv) <= 0.02 ? 'P' : 'F';
+        const mDiff = mMax - mMin;
+        const tDiff = tMax - tMin;
 
-        console.log(`✅ Board ${boardNum} (${serial}):`);
-        console.log(`   Start: ${filtered[0].timestamp}`);
-        console.log(`   End:   ${filtered[filtered.length - 1].timestamp}`);
-        console.log(`   Samples: ${filtered.length}`);
-        console.log(`   Mv: ${mv.toFixed(3)}, Pass: ${pass}`);
+        // MV formula based on original Excel logic
+        const mv = tDiff !== 0 ? (mDiff / (tDiff / 0.025)).toFixed(3) : '';
+
+        const pass =
+          isStableMoisture(filtered) && Math.abs(mv) <= 1 ? 'P' : 'F';
 
         report.push([
           boardNum,
@@ -85,11 +90,11 @@ const DownloadTestReportButton = () => {
           formatExcelDate(filtered[filtered.length - 1].timestamp),
           mMax.toFixed(3),
           mMin.toFixed(3),
-          (mMax - mMin).toFixed(3),
+          mDiff.toFixed(3),
           tMax.toFixed(3),
           tMin.toFixed(3),
-          (tMax - tMin).toFixed(3),
-          mv.toFixed(3),
+          tDiff.toFixed(3),
+          mv,
           pass,
         ]);
       }
@@ -111,7 +116,6 @@ const DownloadTestReportButton = () => {
     ];
 
     const csv = [header, ...report].map((r) => r.join(',')).join('\n');
-
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -124,7 +128,7 @@ const DownloadTestReportButton = () => {
 
   return (
     <Button type="primary" onClick={generateReport}>
-      🧪 Download Test Report (Alpha)
+      🧪 Download Test Report (Final MV Logic)
     </Button>
   );
 };
