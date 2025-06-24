@@ -172,7 +172,7 @@ const AnalyticsControlsWrapper = ({ children }) => {
         </Row>
       )}
       <Divider />
-      hi
+
       <div style={{ marginTop: '1rem' }}>{children}</div>
     </div>
   );
