@@ -34,11 +34,7 @@ const DownloadCSVButton = () => {
   };
 
   return (
-    <Button
-      onClick={downloadCSV}
-      type="primary"
-      style={{ marginBottom: '1rem', marginLeft: '1rem' }}
-    >
+    <Button onClick={downloadCSV} type="primary" style={{ marginLeft: '1rem' }}>
       ⬇️ Download Full CSV
     </Button>
   );
