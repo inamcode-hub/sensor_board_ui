@@ -1,13 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchChartData } from '../features/redux-store/chartSlice';
 import { toast } from 'react-toastify';
 import dayjs from 'dayjs';
 
-import { Select, DatePicker, Button, Typography, Space, Row, Col } from 'antd';
+import {
+  Select,
+  DatePicker,
+  Button,
+  Typography,
+  Space,
+  Row,
+  Col,
+  Divider,
+} from 'antd';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 const { Option } = Select;
+
+const STORAGE_KEY = 'dm_test_start_time';
 
 const AnalyticsControlsWrapper = ({ children }) => {
   const dispatch = useDispatch();
@@ -17,6 +28,17 @@ const AnalyticsControlsWrapper = ({ children }) => {
   const [start, setStart] = useState(null);
   const [end, setEnd] = useState(null);
   const [userTouchedEnd, setUserTouchedEnd] = useState(false);
+  const [savedStart, setSavedStart] = useState(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      const parsed = dayjs(stored);
+      if (parsed.isValid()) {
+        setSavedStart(parsed);
+      }
+    }
+  }, []);
 
   const handleStartChange = (value) => {
     setStart(value);
@@ -45,6 +67,33 @@ const AnalyticsControlsWrapper = ({ children }) => {
         end: end?.format('YYYY-MM-DDTHH:mm'),
       })
     );
+  };
+
+  const saveStartToLocal = () => {
+    if (!start) {
+      toast.error('❌ Set a start date first.');
+      return;
+    }
+    localStorage.setItem(STORAGE_KEY, start.toISOString());
+    setSavedStart(start);
+    toast.success('✅ Test start time saved.');
+  };
+
+  const useSavedStart = () => {
+    if (!savedStart) {
+      toast.warn('⚠️ No saved time found.');
+      return;
+    }
+
+    const now = dayjs();
+    const autoEnd = savedStart.add(2, 'hour');
+    const endValue = autoEnd.isAfter(now) ? now : autoEnd;
+
+    setStart(savedStart);
+    setEnd(endValue);
+    setUserTouchedEnd(false);
+
+    toast.success('📌 Start and end auto-filled.');
   };
 
   return (
@@ -85,6 +134,16 @@ const AnalyticsControlsWrapper = ({ children }) => {
                 placeholder="End date/time"
               />
             </Col>
+            <Col>
+              <Button onClick={useSavedStart} disabled={!savedStart}>
+                📌 Use Saved Start
+              </Button>
+            </Col>
+            <Col>
+              <Button onClick={saveStartToLocal} disabled={!start}>
+                🧠 Save This Start
+              </Button>
+            </Col>
           </>
         )}
 
@@ -100,7 +159,20 @@ const AnalyticsControlsWrapper = ({ children }) => {
         </Col>
       </Row>
 
-      <div style={{ marginTop: '2rem' }}>{children}</div>
+      {savedStart && (
+        <Row style={{ marginTop: '0.5rem' }}>
+          <Col>
+            <Text type="secondary">
+              🧠 Last saved start:{' '}
+              <strong>{savedStart.format('YYYY-MM-DD HH:mm')}</strong>
+            </Text>
+          </Col>
+        </Row>
+      )}
+
+      <Divider />
+
+      <div style={{ marginTop: '1rem' }}>{children}</div>
     </div>
   );
 };
