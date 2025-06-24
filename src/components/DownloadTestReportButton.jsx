@@ -124,7 +124,7 @@ const DownloadTestReportButton = () => {
 
   return (
     <Button type="primary" onClick={generateReport}>
-      🧪 Download Test Report (Beta)
+      🧪 Download Test Report (Alpha)
     </Button>
   );
 };
