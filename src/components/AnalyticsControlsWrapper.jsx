@@ -148,7 +148,7 @@ const AnalyticsControlsWrapper = ({ children }) => {
           </>
         )}
 
-        <Col>
+        <Col style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <Button
             type="primary"
             onClick={handleFetch}
