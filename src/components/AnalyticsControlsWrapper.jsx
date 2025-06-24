@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchChartData } from '../features/redux-store/chartSlice';
 import { toast } from 'react-toastify';
 import dayjs from 'dayjs';
+import DownloadCSVButton from './DownloadCSVButton'; // adjust path if needed
 
 import {
   Select,
@@ -22,7 +23,7 @@ const STORAGE_KEY = 'dm_test_start_time';
 
 const AnalyticsControlsWrapper = ({ children }) => {
   const dispatch = useDispatch();
-  const { loading } = useSelector((state) => state.chart);
+  const { loading, data } = useSelector((state) => state.chart);
 
   const [interval, setInterval] = useState('1h');
   const [start, setStart] = useState(null);
@@ -99,7 +100,6 @@ const AnalyticsControlsWrapper = ({ children }) => {
   return (
     <div style={{ padding: '0rem' }}>
       <Title level={3}>📊 Analytics View</Title>
-
       <Row gutter={[16, 16]} align="middle">
         <Col>
           <Select
@@ -156,9 +156,9 @@ const AnalyticsControlsWrapper = ({ children }) => {
           >
             {loading ? 'Loading...' : 'Fetch Data'}
           </Button>
+          {data && data.length > 0 && <DownloadCSVButton />}
         </Col>
       </Row>
-
       {savedStart && (
         <Row style={{ marginTop: '0.5rem' }}>
           <Col>
@@ -169,9 +169,8 @@ const AnalyticsControlsWrapper = ({ children }) => {
           </Col>
         </Row>
       )}
-
       <Divider />
-
+      hi
       <div style={{ marginTop: '1rem' }}>{children}</div>
     </div>
   );
