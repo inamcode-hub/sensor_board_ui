@@ -15,6 +15,7 @@ import {
   Col,
   Divider,
 } from 'antd';
+import DownloadTestReportButton from './DownloadTestReportButton';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -157,6 +158,7 @@ const AnalyticsControlsWrapper = ({ children }) => {
             {loading ? 'Loading...' : 'Fetch Data'}
           </Button>
           {data && data.length > 0 && <DownloadCSVButton />}
+          {data.length > 0 && <DownloadTestReportButton />}
         </Col>
       </Row>
       {savedStart && (
