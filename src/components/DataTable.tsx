@@ -11,6 +11,17 @@ import dayjs from 'dayjs';
 import { toast } from 'react-toastify';
 
 const { Text } = Typography;
+const getOutOfRangeBoardIndices = (item) => {
+  const outOfRange = [];
+  for (let i = 0; i < 12; i++) {
+    const m = parseFloat(item[`ai${i * 2 + 1}`] || 0);
+    const t = parseFloat(item[`ai${i * 2 + 2}`] || 0);
+    if (m < 1.0 || m > 6.0 || t < 1.0 || t > 2.4) {
+      outOfRange.push(i + 1);
+    }
+  }
+  return outOfRange;
+};
 
 const DataTable = () => {
   const dispatch = useDispatch();
@@ -65,25 +76,33 @@ const DataTable = () => {
     Array.from({ length: 12 }, (_, i) => {
       const aiM = `ai${i * 2 + 1}`;
       const aiT = `ai${i * 2 + 2}`;
-      const mVal = parseFloat(item[aiM] || 0).toFixed(3);
-      const tVal = parseFloat(item[aiT] || 0).toFixed(3);
+      const mRaw = parseFloat(item[aiM] || 0);
+      const tRaw = parseFloat(item[aiT] || 0);
+      const mVal = mRaw.toFixed(3);
+      const tVal = tRaw.toFixed(3);
+
+      const mOutOfRange = mRaw < 1.0 || mRaw > 6.0;
+      const tOutOfRange = tRaw < 1.0 || tRaw > 2.4;
+      const isOutOfRange = mOutOfRange || tOutOfRange;
 
       return (
         <Col key={i} xs={24} sm={12} md={8} lg={6}>
           <Card
             bordered={false}
             style={{
-              background: 'linear-gradient(135deg, #d0f0e0, #e8fcf8)', // light mint-teal gradient
+              background: isOutOfRange
+                ? 'linear-gradient(135deg, #ffeaea, #fff5f5)' // redish
+                : 'linear-gradient(135deg, #d0f0e0, #e8fcf8)',
               padding: '0.75rem 1rem',
               borderRadius: '16px 16px 0 0',
               borderBottom: '1px solid #c6f6d5',
               backgroundImage: `repeating-linear-gradient(
-    45deg,
-    rgba(0, 128, 128, 0.05),
-    rgba(0, 128, 128, 0.05) 1px,
-    transparent 1px,
-    transparent 6px
-  )`,
+              45deg,
+              rgba(255, 0, 0, 0.03),
+              rgba(255, 0, 0, 0.03) 1px,
+              transparent 1px,
+              transparent 6px
+            )`,
               fontWeight: 600,
               letterSpacing: 0.5,
               color: '#004d40',
@@ -92,7 +111,9 @@ const DataTable = () => {
             title={
               <div
                 style={{
-                  background: 'linear-gradient(180deg, #f4fefc, #e0f7fa)',
+                  background: isOutOfRange
+                    ? 'linear-gradient(180deg, #fff1f0, #ffd9d9)'
+                    : 'linear-gradient(180deg, #f4fefc, #e0f7fa)',
                   padding: '1rem',
                   borderRadius: '0 0 16px 16px',
                   borderTop: 'none',
@@ -103,7 +124,7 @@ const DataTable = () => {
                   strong
                   style={{
                     fontSize: '16px',
-                    color: '#08123d',
+                    color: isOutOfRange ? '#a8071a' : '#08123d',
                     textShadow: '0 0 1px rgba(47,84,235,0.2)',
                   }}
                 >
@@ -132,6 +153,11 @@ const DataTable = () => {
                   >
                     {mVal}
                   </div>
+                  {mOutOfRange && (
+                    <Text type="danger" style={{ fontSize: 12 }}>
+                      ⚠ Out of range
+                    </Text>
+                  )}
                 </Col>
                 <Col>
                   <Space direction="horizontal" align="center">
@@ -150,6 +176,11 @@ const DataTable = () => {
                   >
                     {tVal}
                   </div>
+                  {tOutOfRange && (
+                    <Text type="danger" style={{ fontSize: 12 }}>
+                      ⚠ Out of range
+                    </Text>
+                  )}
                 </Col>
               </Row>
             </Space>
