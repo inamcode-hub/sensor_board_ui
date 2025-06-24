@@ -128,7 +128,7 @@ const DownloadTestReportButton = () => {
 
   return (
     <Button type="primary" onClick={generateReport}>
-      🧪 Download Test Report (Final MV Logic)
+      🧪 Download Test Report
     </Button>
   );
 };
