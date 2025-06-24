@@ -26,11 +26,27 @@ const ChartBoard = ({ boardNumber = 1 }) => {
     );
   }
 
-  // Filter out entries with invalid values
+  // Filter out entries with valid moisture/temperature
   const cleanData = data.filter(
     (d) =>
       d.timestamp && !isNaN(parseFloat(d[aiM])) && !isNaN(parseFloat(d[aiT]))
   );
+
+  // Moisture spike detection: if any two consecutive readings within 1s differ by > 0.02
+  const hasMoistureSpike = () => {
+    for (let i = 1; i < cleanData.length; i++) {
+      const prev = cleanData[i - 1];
+      const curr = cleanData[i];
+      const timeDiff = new Date(curr.timestamp) - new Date(prev.timestamp);
+      const mDiff = Math.abs(parseFloat(curr[aiM]) - parseFloat(prev[aiM]));
+      if (timeDiff <= 1000 && mDiff > 0.02) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  const boardFailed = hasMoistureSpike();
 
   const series = [
     {
@@ -99,7 +115,7 @@ const ChartBoard = ({ boardNumber = 1 }) => {
           moment.tz(val, 'America/Toronto').format('YYYY-MM-DD HH:mm:ss z'),
       },
     },
-    colors: ['#1890ff', '#fa541c'], // Blue for M, Red for T
+    colors: ['#1890ff', '#fa541c'],
     legend: {
       position: 'top',
       horizontalAlign: 'center',
@@ -111,8 +127,20 @@ const ChartBoard = ({ boardNumber = 1 }) => {
     <Link to={`/analytics/board/${boardNumber}`}>
       <Card
         hoverable
-        title={<Title level={5}>Board {boardNumber} (M & T)</Title>}
-        style={{ width: '100%', minHeight: 300 }}
+        title={
+          <Title
+            level={5}
+            style={{ color: boardFailed ? '#a8071a' : '#096dd9' }}
+          >
+            Board {boardNumber} (M & T) {boardFailed ? '❌ FAIL' : '✅ PASS'}
+          </Title>
+        }
+        style={{
+          width: '100%',
+          minHeight: 300,
+          backgroundColor: boardFailed ? '#fff1f0' : undefined,
+          borderColor: boardFailed ? '#ffa39e' : undefined,
+        }}
         bodyStyle={{ padding: '1rem' }}
       >
         <Chart options={options} series={series} type="line" height={250} />
