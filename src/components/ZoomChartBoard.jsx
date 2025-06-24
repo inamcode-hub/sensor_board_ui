@@ -28,6 +28,11 @@ const ZoomChartBoard = ({ boardNumber = 1 }) => {
     },
   ];
 
+  const minTs = data.length ? new Date(data[0].timestamp).getTime() : undefined;
+  const maxTs = data.length
+    ? new Date(data[data.length - 1].timestamp).getTime()
+    : undefined;
+
   const options = {
     chart: {
       id: `zoom-board-${boardNumber}`,
@@ -35,7 +40,7 @@ const ZoomChartBoard = ({ boardNumber = 1 }) => {
       zoom: {
         enabled: true,
         type: 'x',
-        autoScaleYaxis: true,
+        autoScaleYaxis: false, // disable auto Y-scaling for consistent appearance
       },
       toolbar: {
         autoSelected: 'zoom',
@@ -50,12 +55,24 @@ const ZoomChartBoard = ({ boardNumber = 1 }) => {
       labels: {
         datetimeUTC: false,
       },
+      min: minTs,
+      max: maxTs,
     },
-    yaxis: {
-      labels: {
-        formatter: (val) => val.toFixed(2),
+    yaxis: [
+      {
+        seriesName: 'Moisture (M)',
+        min: 3.5,
+        max: 6.0,
+        title: { text: 'Moisture (M)' },
       },
-    },
+      {
+        opposite: true,
+        seriesName: 'Temperature (T)',
+        min: 1.0,
+        max: 2.5,
+        title: { text: 'Temperature (T)' },
+      },
+    ],
     stroke: {
       curve: 'smooth',
       width: 2,
@@ -65,7 +82,7 @@ const ZoomChartBoard = ({ boardNumber = 1 }) => {
         format: 'yyyy-MM-dd HH:mm:ss',
       },
     },
-    colors: ['#1890ff', '#fa541c'], // Ant Design palette
+    colors: ['#1890ff', '#fa541c'],
     legend: {
       position: 'top',
       horizontalAlign: 'center',

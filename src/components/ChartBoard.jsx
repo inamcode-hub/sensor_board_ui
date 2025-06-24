@@ -13,6 +13,7 @@ const ChartBoard = ({ boardNumber = 1 }) => {
   const aiM = `ai${(boardNumber - 1) * 2 + 1}`;
   const aiT = `ai${(boardNumber - 1) * 2 + 2}`;
 
+  // Guard clause for no data
   if (!Array.isArray(data) || data.length === 0) {
     return (
       <Card
@@ -25,17 +26,25 @@ const ChartBoard = ({ boardNumber = 1 }) => {
     );
   }
 
+  // Filter out entries with invalid values
+  const cleanData = data.filter(
+    (d) =>
+      d.timestamp && !isNaN(parseFloat(d[aiM])) && !isNaN(parseFloat(d[aiT]))
+  );
+
   const series = [
     {
       name: 'Moisture (M)',
-      data: data.map((d) => [
+      type: 'line',
+      data: cleanData.map((d) => [
         new Date(d.timestamp).getTime(),
         parseFloat(d[aiM]),
       ]),
     },
     {
       name: 'Temperature (T)',
-      data: data.map((d) => [
+      type: 'line',
+      data: cleanData.map((d) => [
         new Date(d.timestamp).getTime(),
         parseFloat(d[aiT]),
       ]),
@@ -45,28 +54,56 @@ const ChartBoard = ({ boardNumber = 1 }) => {
   const options = {
     chart: {
       type: 'line',
+      fontFamily:
+        'Roboto, Inter, -apple-system, BlinkMacSystemFont, sans-serif',
       zoom: { enabled: false },
       toolbar: { show: false },
       animations: { enabled: false },
     },
     xaxis: {
       type: 'datetime',
-      labels: { datetimeUTC: false },
+      labels: {
+        datetimeUTC: false,
+        formatter: (val) => moment.tz(val, 'America/Toronto').format('HH:mm'),
+      },
+      title: {
+        text: 'Time (Toronto)',
+      },
     },
-    yaxis: {
-      labels: { formatter: (val) => val.toFixed(2) },
-    },
+    yaxis: [
+      {
+        seriesName: 'Moisture (M)',
+        title: { text: 'Moisture (M)' },
+        min: 3.5,
+        max: 5.9,
+        labels: { formatter: (val) => val.toFixed(2) },
+      },
+      {
+        opposite: true,
+        seriesName: 'Temperature (T)',
+        title: { text: 'Temperature (T)' },
+        min: 1.0,
+        max: 2.4,
+        labels: { formatter: (val) => val.toFixed(2) },
+      },
+    ],
     stroke: {
       curve: 'smooth',
       width: 2,
     },
     tooltip: {
-      x: { format: 'HH:mm:ss' },
+      shared: true,
+      x: {
+        format: 'yyyy-MM-dd HH:mm:ss',
+        formatter: (val) =>
+          moment.tz(val, 'America/Toronto').format('YYYY-MM-DD HH:mm:ss z'),
+      },
     },
-    colors: ['#1890ff', '#fa541c'], // Ant Design blue + volcano
+    colors: ['#1890ff', '#fa541c'], // Blue for M, Red for T
     legend: {
       position: 'top',
       horizontalAlign: 'center',
+      fontSize: '14px',
     },
   };
 

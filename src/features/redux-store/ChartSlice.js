@@ -12,13 +12,19 @@ export const fetchChartData = createAsyncThunk(
       if (interval === 'raw') {
         url = `${API_BASE}/sensor`;
       } else {
+        const intervalMap = {
+          '1s': 'second',
+          '1m': 'minute',
+          '1h': 'hour',
+        };
+
         const body = JSON.stringify({
           start,
           end,
-          inputInterval: interval,
+          inputInterval: intervalMap[interval] || interval,
         });
 
-        const res = await fetch(`${API_BASE}/query`, {
+        const res = await fetch(`${API_BASE}/aligned-query`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
