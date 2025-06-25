@@ -2,10 +2,12 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import Chart from 'react-apexcharts';
 import { Card, Typography } from 'antd';
-
+import { useParams } from 'react-router-dom';
 const { Title } = Typography;
 
-const ZoomChartBoard = ({ boardNumber = 1 }) => {
+const ZoomChartBoard = () => {
+  const { boardId } = useParams();
+  const boardNumber = parseInt(boardId, 10) || 1;
   const { data, loading, error } = useSelector((state) => state.chart);
 
   const aiM = `ai${(boardNumber - 1) * 2 + 1}`;
