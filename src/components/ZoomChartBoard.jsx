@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import Chart from 'react-apexcharts';
 import { Card, Typography } from 'antd';
 import { useParams } from 'react-router-dom';
+
 const { Title } = Typography;
 
 const ZoomChartBoard = () => {
@@ -13,27 +14,85 @@ const ZoomChartBoard = () => {
   const aiM = `ai${(boardNumber - 1) * 2 + 1}`;
   const aiT = `ai${(boardNumber - 1) * 2 + 2}`;
 
+  const cleanData = data.filter(
+    (d) =>
+      d.timestamp && !isNaN(parseFloat(d[aiM])) && !isNaN(parseFloat(d[aiT]))
+  );
+
+  const valuesM = cleanData.map((d) => parseFloat(d[aiM]));
+  const valuesT = cleanData.map((d) => parseFloat(d[aiT]));
+
+  const minM = Math.min(...valuesM);
+  const maxM = Math.max(...valuesM);
+  const minT = Math.min(...valuesT);
+  const maxT = Math.max(...valuesT);
+
+  const paddingM = 0.05;
+  const paddingT = 0.05;
+
   const series = [
     {
       name: 'Moisture (M)',
-      data: data.map((d) => [
+      data: cleanData.map((d) => [
         new Date(d.timestamp).getTime(),
         parseFloat(d[aiM]),
       ]),
     },
     {
       name: 'Temperature (T)',
-      data: data.map((d) => [
+      data: cleanData.map((d) => [
         new Date(d.timestamp).getTime(),
         parseFloat(d[aiT]),
       ]),
     },
   ];
 
-  const minTs = data.length ? new Date(data[0].timestamp).getTime() : undefined;
-  const maxTs = data.length
-    ? new Date(data[data.length - 1].timestamp).getTime()
+  const minTs = cleanData.length
+    ? new Date(cleanData[0].timestamp).getTime()
     : undefined;
+  const maxTs = cleanData.length
+    ? new Date(cleanData[cleanData.length - 1].timestamp).getTime()
+    : undefined;
+
+  // ✅ Detect Moisture Spikes (Δ > 0.02 within 1s)
+  const annotations = {
+    points: [],
+  };
+
+  for (let i = 1; i < cleanData.length; i++) {
+    const prev = cleanData[i - 1];
+    const curr = cleanData[i];
+
+    const prevTime = new Date(prev.timestamp).getTime();
+    const currTime = new Date(curr.timestamp).getTime();
+    const timeDiff = currTime - prevTime;
+
+    const prevVal = parseFloat(prev[aiM]);
+    const currVal = parseFloat(curr[aiM]);
+    const delta = Math.abs(currVal - prevVal);
+
+    if (timeDiff <= 1000 && delta > 0.02) {
+      annotations.points.push({
+        x: currTime,
+        y: currVal,
+        marker: {
+          size: 6,
+          fillColor: '#fa541c',
+          strokeColor: '#000',
+          strokeWidth: 2,
+        },
+        label: {
+          borderColor: '#fa541c',
+          style: {
+            color: '#fff',
+            background: '#fa541c',
+          },
+          text: 'Spike',
+          offsetY: -10,
+        },
+      });
+    }
+  }
 
   const options = {
     chart: {
@@ -42,7 +101,7 @@ const ZoomChartBoard = () => {
       zoom: {
         enabled: true,
         type: 'x',
-        autoScaleYaxis: false, // disable auto Y-scaling for consistent appearance
+        autoScaleYaxis: false,
       },
       toolbar: {
         autoSelected: 'zoom',
@@ -51,7 +110,9 @@ const ZoomChartBoard = () => {
           reset: true,
         },
       },
+      animations: { enabled: false },
     },
+    annotations,
     xaxis: {
       type: 'datetime',
       labels: {
@@ -63,21 +124,28 @@ const ZoomChartBoard = () => {
     yaxis: [
       {
         seriesName: 'Moisture (M)',
-        min: 3.5,
-        max: 6.0,
+        min: minM - paddingM,
+        max: maxM + paddingM,
         title: { text: 'Moisture (M)' },
       },
       {
         opposite: true,
         seriesName: 'Temperature (T)',
-        min: 1.0,
-        max: 2.5,
+        min: minT - paddingT,
+        max: maxT + paddingT,
         title: { text: 'Temperature (T)' },
       },
     ],
     stroke: {
       curve: 'smooth',
       width: 2,
+    },
+    markers: {
+      size: 1,
+      strokeWidth: 0,
+      hover: {
+        sizeOffset: 3,
+      },
     },
     tooltip: {
       x: {
@@ -101,7 +169,7 @@ const ZoomChartBoard = () => {
       {error && <p style={{ color: 'red' }}>❌ Error: {error}</p>}
       {!loading && !data.length && <p>No data available</p>}
 
-      {data.length > 0 && (
+      {cleanData.length > 0 && (
         <Chart options={options} series={series} type="line" height={400} />
       )}
     </Card>
