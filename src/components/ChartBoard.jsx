@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import Chart from 'react-apexcharts';
 import { Link } from 'react-router-dom';
@@ -13,8 +13,50 @@ const ChartBoard = ({ boardNumber = 1 }) => {
   const aiM = `ai${(boardNumber - 1) * 2 + 1}`;
   const aiT = `ai${(boardNumber - 1) * 2 + 2}`;
 
-  // Guard clause for no data
-  if (!Array.isArray(data) || data.length === 0) {
+  // Compute spike detection only when data changes
+  const { boardFailed, spikeCount, cleanData } = useMemo(() => {
+    if (loading || error || !Array.isArray(data) || data.length === 0) {
+      return { boardFailed: false, spikeCount: 0, cleanData: [] };
+    }
+
+    const filtered = data
+      .filter(
+        (d) =>
+          d.timestamp &&
+          !isNaN(parseFloat(d[aiM])) &&
+          !isNaN(parseFloat(d[aiT]))
+      )
+      .map((d) => ({
+        ts: new Date(d.timestamp).getTime(),
+        raw: d,
+        m: parseFloat(d[aiM]),
+      }));
+
+    let spikes = 0;
+
+    for (let i = 0; i < filtered.length; i++) {
+      const { ts: t1, m: m1 } = filtered[i];
+      for (let j = i + 1; j < filtered.length; j++) {
+        const { ts: t2, m: m2 } = filtered[j];
+        const dt = t2 - t1;
+        const dm = Math.abs(m2 - m1);
+
+        if (dt > 2000) break; // outside 1-2s window
+        if (dt >= 1000 && dm > 0.02) {
+          spikes++;
+          break; // avoid multiple counts from same base
+        }
+      }
+    }
+
+    return {
+      boardFailed: spikes > 0,
+      spikeCount: spikes,
+      cleanData: filtered.map(({ raw }) => raw), // return original objects for chart
+    };
+  }, [data, loading, error, boardNumber]);
+
+  if (!Array.isArray(cleanData) || cleanData.length === 0) {
     return (
       <Card
         title={`Board ${boardNumber} (M & T)`}
@@ -25,28 +67,6 @@ const ChartBoard = ({ boardNumber = 1 }) => {
       </Card>
     );
   }
-
-  // Filter out entries with valid moisture/temperature
-  const cleanData = data.filter(
-    (d) =>
-      d.timestamp && !isNaN(parseFloat(d[aiM])) && !isNaN(parseFloat(d[aiT]))
-  );
-
-  // Moisture spike detection: if any two consecutive readings within 1s differ by > 0.02
-  const hasMoistureSpike = () => {
-    for (let i = 1; i < cleanData.length; i++) {
-      const prev = cleanData[i - 1];
-      const curr = cleanData[i];
-      const timeDiff = new Date(curr.timestamp) - new Date(prev.timestamp);
-      const mDiff = Math.abs(parseFloat(curr[aiM]) - parseFloat(prev[aiM]));
-      if (timeDiff <= 1000 && mDiff > 0.02) {
-        return true;
-      }
-    }
-    return false;
-  };
-
-  const boardFailed = hasMoistureSpike();
 
   const series = [
     {
@@ -132,7 +152,10 @@ const ChartBoard = ({ boardNumber = 1 }) => {
             level={5}
             style={{ color: boardFailed ? '#a8071a' : '#096dd9' }}
           >
-            Board {boardNumber} (M & T) {boardFailed ? '❌ FAIL' : '✅ PASS'}
+            Board {boardNumber} (M & T){' '}
+            {boardFailed
+              ? `❌ FAIL - ${spikeCount} Spike${spikeCount > 1 ? 's' : ''}`
+              : '✅ PASS'}
           </Title>
         }
         style={{

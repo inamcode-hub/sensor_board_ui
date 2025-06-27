@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import Chart from 'react-apexcharts';
 import { Card, Typography } from 'antd';
@@ -14,10 +14,16 @@ const ZoomChartBoard = () => {
   const aiM = `ai${(boardNumber - 1) * 2 + 1}`;
   const aiT = `ai${(boardNumber - 1) * 2 + 2}`;
 
-  const cleanData = data.filter(
-    (d) =>
-      d.timestamp && !isNaN(parseFloat(d[aiM])) && !isNaN(parseFloat(d[aiT]))
-  );
+  const cleanData = useMemo(() => {
+    return Array.isArray(data)
+      ? data.filter(
+          (d) =>
+            d.timestamp &&
+            !isNaN(parseFloat(d[aiM])) &&
+            !isNaN(parseFloat(d[aiT]))
+        )
+      : [];
+  }, [data, aiM, aiT]);
 
   const valuesM = cleanData.map((d) => parseFloat(d[aiM]));
   const valuesT = cleanData.map((d) => parseFloat(d[aiT]));
@@ -29,6 +35,83 @@ const ZoomChartBoard = () => {
 
   const paddingM = 0.05;
   const paddingT = 0.05;
+
+  // Detect Moisture Spikes (Δ > 0.02 within 1–2s window)
+  const annotations = useMemo(() => {
+    const points = [];
+    let spikeIndex = 1;
+    let warningIndex = 1;
+
+    const enrichedData = cleanData.map((d) => ({
+      ts: new Date(d.timestamp).getTime(),
+      m: parseFloat(d[aiM]),
+    }));
+
+    for (let i = 0; i < enrichedData.length; i++) {
+      const { ts: t1, m: m1 } = enrichedData[i];
+      for (let j = i + 1; j < enrichedData.length; j++) {
+        const { ts: t2, m: m2 } = enrichedData[j];
+        const dt = t2 - t1;
+        const dm = Math.abs(m2 - m1);
+
+        if (dt > 2000) break;
+
+        if (dt >= 1000 && dm > 0.02) {
+          points.push({
+            x: t2,
+            y: m2,
+            marker: {
+              size: 6,
+              fillColor: '#fa541c',
+              strokeColor: '#000',
+              strokeWidth: 2,
+            },
+            label: {
+              borderColor: '#fa541c',
+              style: {
+                color: '#fff',
+                background: '#fa541c',
+                fontSize: '12px',
+                fontWeight: 500,
+              },
+              text: `Spike #${spikeIndex}: Δ${dm.toFixed(3)}`,
+              offsetY: -10,
+            },
+          });
+          spikeIndex++;
+          break;
+        }
+
+        if (dt >= 1000 && dm > 0.015 && dm <= 0.02) {
+          points.push({
+            x: t2,
+            y: m2,
+            marker: {
+              size: 6,
+              fillColor: '#fa8c16',
+              strokeColor: '#000',
+              strokeWidth: 2,
+            },
+            label: {
+              borderColor: '#fa8c16',
+              style: {
+                color: '#fff',
+                background: '#fa8c16',
+                fontSize: '12px',
+                fontWeight: 500,
+              },
+              text: `Close #${warningIndex}: Δ${dm.toFixed(3)}`,
+              offsetY: -10,
+            },
+          });
+          warningIndex++;
+          break;
+        }
+      }
+    }
+
+    return { points };
+  }, [cleanData, aiM]);
 
   const series = [
     {
@@ -53,46 +136,6 @@ const ZoomChartBoard = () => {
   const maxTs = cleanData.length
     ? new Date(cleanData[cleanData.length - 1].timestamp).getTime()
     : undefined;
-
-  // ✅ Detect Moisture Spikes (Δ > 0.02 within 1s)
-  const annotations = {
-    points: [],
-  };
-
-  for (let i = 1; i < cleanData.length; i++) {
-    const prev = cleanData[i - 1];
-    const curr = cleanData[i];
-
-    const prevTime = new Date(prev.timestamp).getTime();
-    const currTime = new Date(curr.timestamp).getTime();
-    const timeDiff = currTime - prevTime;
-
-    const prevVal = parseFloat(prev[aiM]);
-    const currVal = parseFloat(curr[aiM]);
-    const delta = Math.abs(currVal - prevVal);
-
-    if (timeDiff <= 1000 && delta > 0.02) {
-      annotations.points.push({
-        x: currTime,
-        y: currVal,
-        marker: {
-          size: 6,
-          fillColor: '#fa541c',
-          strokeColor: '#000',
-          strokeWidth: 2,
-        },
-        label: {
-          borderColor: '#fa541c',
-          style: {
-            color: '#fff',
-            background: '#fa541c',
-          },
-          text: 'Spike',
-          offsetY: -10,
-        },
-      });
-    }
-  }
 
   const options = {
     chart: {
@@ -161,7 +204,13 @@ const ZoomChartBoard = () => {
 
   return (
     <Card
-      title={<Title level={4}>🔍 Zoom Chart - Board {boardNumber}</Title>}
+      title={
+        <Title level={4}>
+          🔍 Zoom Chart - Board {boardNumber}{' '}
+          {annotations.points.length > 0 &&
+            `(Spikes: ${annotations.points.length})`}
+        </Title>
+      }
       style={{ marginBottom: '1rem' }}
       bodyStyle={{ padding: '1rem' }}
     >

@@ -26,7 +26,7 @@ const AnalyticsControlsWrapper = ({ children }) => {
   const dispatch = useDispatch();
   const { loading, data } = useSelector((state) => state.chart);
 
-  const [interval, setInterval] = useState('1h');
+  const [interval, setInterval] = useState('1s');
   const [start, setStart] = useState(null);
   const [end, setEnd] = useState(null);
   const [userTouchedEnd, setUserTouchedEnd] = useState(false);
